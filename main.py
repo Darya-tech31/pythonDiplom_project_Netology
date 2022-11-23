@@ -1,6 +1,7 @@
 import os
 import requests
 import datetime
+import json
 
 
 def get_token_id(file_name):
@@ -128,12 +129,17 @@ class Yandex:
                 print(f'Копирование отменено:Файл {key} уже существует')
         print(f'\nЗапрос завершен, новых файлов добавлено: {added_files_num}')
 
+if __name__ == '__main__':
 
-tokenVK = 'VK_TOKEN.txt'  # токен и id доступа хранятся в файле
-tokenYandex = 'Ya_TOKEN.txt'  # хранится только токен яндекс диска
+    tokenVK = 'VK_TOKEN.txt'
+    tokenYandex = 'Ya_TOKEN.txt'
 
-my_VK = VK(get_token_id(tokenVK))
-print(my_VK.json)
+    my_VK = VK(get_token_id(tokenVK))
 
-my_yandex = Yandex('VK photo copies', get_token_id(tokenYandex))
-my_yandex.create_copy(my_VK.export_dict)
+    with open('my_VK_photo.json', 'w') as outfile:
+        json.dump(my_VK.json, outfile)
+
+
+    my_yandex = Yandex('VK photo copies', get_token_id(tokenYandex))
+    my_yandex.create_copy(my_VK.export_dict)
+
