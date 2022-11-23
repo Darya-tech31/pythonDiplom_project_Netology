@@ -12,6 +12,7 @@ def get_token_id(file_name):
 
 def find_max_dpi(dict_in_search):
     max_dpi = 0
+    need_elem = 0
     for j in range(len(dict_in_search)):
         file_dpi = dict_in_search[j].get('width') * dict_in_search[j].get('height')
         if file_dpi > max_dpi:
@@ -34,6 +35,18 @@ class VK:
         self.version = version
         self.start_params = {'access_token': self.token, 'v': self.version}
         self.json, self.export_dict = self._sort_info()
+
+    def photos(self):
+        url = 'https://api.vk.com/method/photos.get'
+        params = {'owner_id': self.id,
+                  'album_id': 'profile',
+                  'photo_sizes': 1,
+                  'extended': 1}
+        responce = requests.get(url, params={**self.start_params, **params})
+        if responce.status_code == 200:
+            return 'Успешно'
+        else:
+            return f"Ошибка загрузки! Код ошибки: {responce.status_code}"
 
     def _get_photo_info(self):
         url = 'https://api.vk.com/method/photos.get'
