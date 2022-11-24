@@ -43,11 +43,8 @@ class VK:
                   'album_id': 'profile',
                   'photo_sizes': 1,
                   'extended': 1}
-        responce = requests.get(url, params={**self.start_params, **params})
-        if responce.status_code == 200:
-            return 'Успешно'
-        else:
-            return f"Ошибка загрузки! Код ошибки: {responce.status_code}"
+        photo_info = requests.get(url, params={**self.start_params, **params}).json()['response']
+        return photo_info['count'], photo_info['items']
 
     def _get_photo_info(self):
         url = 'https://api.vk.com/method/photos.get'
@@ -55,8 +52,30 @@ class VK:
                   'album_id': 'profile',
                   'photo_sizes': 1,
                   'extended': 1}
-        photo_info = requests.get(url, params={**self.start_params, **params}).json()['response']
-        return photo_info['count'], photo_info['items']
+        ready = False
+        while not ready:
+            photo_info = requests.get(url, params={**self.start_params, **params}).json()['response']
+            return photo_info['count'], photo_info['items']
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            if 'error' in photo_info:
+                if photo_info['error']['error_code'] == 18:
+                    raise DeletedUser()
+                elif photo_info['error']['error_code'] == 15:
+                    raise AccesDenied()
+                elif photo_info['error']['error_code'] == 10:
+                    raise UnknownError()
+                else:
+                    print(photo_info)
+                    raise Exception
+            else:
+                ready = True
+        try:
+            res = photo_info['response']
+        except KeyError:
+            print(r)
+            raise
+        return res
 
     def _get_logs_only(self):
         photo_count, photo_items = self._get_photo_info()
@@ -129,8 +148,8 @@ class Yandex:
                 print(f'Копирование отменено:Файл {key} уже существует')
         print(f'\nЗапрос завершен, новых файлов добавлено: {added_files_num}')
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     tokenVK = 'VK_TOKEN.txt'
     tokenYandex = 'Ya_TOKEN.txt'
 
@@ -139,7 +158,5 @@ if __name__ == '__main__':
     with open('my_VK_photo.json', 'w') as outfile:
         json.dump(my_VK.json, outfile)
 
-
     my_yandex = Yandex('VK photo copies', get_token_id(tokenYandex))
     my_yandex.create_copy(my_VK.export_dict)
-
